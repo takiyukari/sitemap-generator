@@ -1,0 +1,2077 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>サイトマップジェネレーター | 管理画面</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #4F46E5;
+      --primary-light: #EEF2FF;
+      --gray-50:  #F8FAFC;
+      --gray-100: #F1F5F9;
+      --gray-200: #E2E8F0;
+      --gray-300: #CBD5E1;
+      --gray-400: #94A3B8;
+      --gray-500: #64748B;
+      --gray-600: #475569;
+      --gray-900: #0F172A;
+      --white:    #FFFFFF;
+      --radius:   8px;
+      --radius-lg: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Hiragino Sans', 'Noto Sans JP', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    /* ===== ヘッダー ===== */
+    .app-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      height: 52px;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-brand .logo-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .header-brand h1 {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      background: var(--primary-light);
+      color: var(--primary);
+      border-radius: 999px;
+      letter-spacing: 0.03em;
+    }
+
+    .header-actions { display: flex; gap: 8px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 7px 14px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--gray-600);
+      border: 1px solid var(--gray-200);
+    }
+    .btn-ghost:hover { background: var(--gray-100); }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,.3); }
+    .btn-primary:active { transform: translateY(0); }
+
+    /* ===== ボディ ===== */
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* ===== サイドバー ===== */
+    .sidebar {
+      width: 360px;
+      flex-shrink: 0;
+      background: var(--white);
+      border-right: 1px solid var(--gray-200);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--gray-200);
+      flex-shrink: 0;
+    }
+
+    .sidebar-tab {
+      flex: 1;
+      padding: 10px 0;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--gray-400);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .sidebar-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+    .sidebar-tab:hover:not(.active) { color: var(--gray-600); }
+
+    .sidebar-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    /* スクロールバー（マウス操作デバイスのみ） */
+    @media (pointer: fine) {
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: var(--gray-100); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb { background: var(--gray-300); border-radius: 3px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--gray-400); }
+    }
+
+    /* ===== フォーム ===== */
+    .form-section { margin-bottom: 20px; }
+
+    .form-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 10px;
+    }
+
+    .form-field { margin-bottom: 10px; }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--gray-600);
+      margin-bottom: 4px;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.15s;
+      color: var(--gray-900);
+      background: var(--white);
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(79,70,229,.08); }
+
+    /* カラー選択 */
+    .color-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .color-chip {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      outline: 2px solid transparent;
+    }
+    .color-chip:hover { transform: scale(1.15); }
+    .color-chip.active { outline-color: var(--gray-900); outline-offset: 2px; }
+
+    /* ===== ページエディタ ===== */
+    .pages-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .pages-header .form-section-title { margin-bottom: 0; }
+
+    .add-root-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border: 1px dashed var(--gray-300);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--gray-500);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .add-root-btn:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+    /* ページアイテム */
+    .pe-list { display: flex; flex-direction: column; gap: 6px; }
+
+    .pe-item {
+      border: 1px solid var(--gray-200);
+      border-radius: var(--radius);
+      background: var(--white);
+      overflow: hidden;
+      transition: border-color 0.15s;
+    }
+    .pe-item:hover { border-color: var(--gray-300); }
+
+    .pe-item-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 8px 8px 10px;
+      background: var(--gray-50);
+    }
+
+    .pe-icon-btn {
+      font-size: 18px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 2px;
+      border-radius: 4px;
+      transition: background 0.15s;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .pe-icon-btn:hover { background: var(--gray-200); }
+
+    .pe-name {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 600;
+      outline: none;
+      color: var(--gray-900);
+      min-width: 0;
+    }
+    .pe-name::placeholder { color: var(--gray-300); font-weight: 400; }
+
+    .pe-btns {
+      display: flex;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .ib {
+      width: 24px;
+      height: 24px;
+      border: none;
+      background: transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+    }
+    .ib:hover { background: var(--gray-200); color: var(--gray-900); }
+    .ib:disabled { opacity: 0.3; cursor: not-allowed; }
+    .ib.add { border: 1px solid #C7D2FE; background: var(--primary-light); color: var(--primary); }
+    .ib.add:hover { background: #E0E7FF; color: #3730A3; border-color: #A5B4FC; }
+    .ib.del { border: 1px solid var(--gray-200); background: var(--gray-50); color: var(--gray-400); }
+    .ib.del:hover { background: #FEF2F2; color: #DC2626; border-color: #FECACA; }
+
+    .pe-body {
+      padding: 6px 10px 8px;
+    }
+
+    .pe-desc {
+      width: 100%;
+      border: none;
+      font-size: 12px;
+      color: var(--gray-500);
+      resize: none;
+      outline: none;
+      background: transparent;
+      line-height: 1.6;
+      font-family: inherit;
+      min-height: 36px;
+    }
+    .pe-desc::placeholder { color: var(--gray-300); }
+
+    .pe-children {
+      padding: 4px 8px 8px 16px;
+      border-top: 1px solid var(--gray-100);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pe-empty {
+      text-align: center;
+      color: var(--gray-400);
+      font-size: 13px;
+      padding: 40px 20px;
+      line-height: 1.8;
+    }
+
+    /* ===== プレビューパネル ===== */
+    .preview-panel {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    .preview-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 20px;
+      background: var(--white);
+      border-bottom: 1px solid var(--gray-200);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+
+    .preview-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gray-400);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .preview-note {
+      font-size: 11px;
+      color: var(--gray-400);
+    }
+
+    .preview-content {
+      flex: 1;
+      overflow: auto;
+      background: #EEF2FF;
+      background-image: radial-gradient(circle at 20px 20px, rgba(79,70,229,.06) 2px, transparent 0);
+      background-size: 40px 40px;
+    }
+
+    /* ===== サイトマッププレビュー ===== */
+    .sm-wrap {
+      min-height: 100%;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .sm-header {
+      margin-bottom: 28px;
+      padding: 20px 24px;
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .sm-header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .sm-site-name {
+      font-size: 18px;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.02em;
+    }
+
+    .sm-meta {
+      font-size: 12px;
+      color: var(--gray-400);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .sm-note {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--gray-400);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* ツリー */
+    .sm-tree { width: 100%; }
+
+    .sm-tree ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    /* 縦線 */
+    .sm-tree ul::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 12px;
+      width: 2px;
+      background: var(--sm-line, #C7D2FE);
+      border-radius: 1px;
+    }
+
+    .sm-tree li {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    /* 横線 */
+    .sm-tree li::before {
+      content: '';
+      position: absolute;
+      left: -20px;
+      top: 18px;
+      width: 16px;
+      height: 2px;
+      background: var(--sm-line, #C7D2FE);
+    }
+
+    .sm-tree > ul::before { display: none; }
+    .sm-tree > ul > li::before { display: none; }
+
+    .sm-node-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.07);
+      cursor: pointer;
+      border-left: 4px solid var(--sm-color, #4F46E5);
+      transition: all 0.18s;
+      min-width: 140px;
+      max-width: 380px;
+      position: relative;
+      user-select: none;
+    }
+    .sm-node-card:hover {
+      transform: translateX(3px);
+      box-shadow: 0 4px 16px rgba(0,0,0,.12);
+    }
+
+    .sm-node-icon { font-size: 16px; flex-shrink: 0; }
+
+    .sm-node-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-900);
+      flex: 1;
+    }
+
+    .sm-node-desc-hint {
+      font-size: 10px;
+      color: var(--gray-400);
+      white-space: nowrap;
+    }
+
+    .sm-toggle {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--gray-100);
+      border: none;
+      cursor: pointer;
+      font-size: 9px;
+      color: var(--gray-500);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s;
+    }
+    .sm-toggle:hover { background: var(--gray-200); }
+    .sm-toggle.open { background: var(--sm-color, #4F46E5); color: white; }
+
+    .sm-node-children {
+      margin-top: 6px;
+      overflow: hidden;
+    }
+
+    /* ルートノードは大きめ */
+    .sm-tree > ul > li > .sm-node-card {
+      padding: 14px 20px;
+      border-radius: 12px;
+      border-left-width: 5px;
+    }
+    .sm-tree > ul > li > .sm-node-card .sm-node-name {
+      font-size: 15px;
+    }
+    .sm-tree > ul > li > .sm-node-card .sm-node-icon {
+      font-size: 20px;
+    }
+
+    .sm-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      color: var(--gray-400);
+      text-align: center;
+      gap: 8px;
+    }
+
+    .sm-empty .empty-icon { font-size: 40px; opacity: .4; }
+    .sm-empty p { font-size: 14px; line-height: 1.8; }
+
+    /* ===== アイコンピッカー ===== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.4);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .overlay.show { display: flex; }
+
+    .overlay-box {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.2);
+      max-width: 360px;
+      width: 90%;
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+    }
+
+    .overlay-title {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--gray-900);
+    }
+
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 6px;
+    }
+
+    .icon-option {
+      aspect-ratio: 1;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      background: transparent;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.12s;
+    }
+    .icon-option:hover { background: var(--gray-100); border-color: var(--gray-200); }
+    .icon-option.selected { background: var(--primary-light); border-color: var(--primary); }
+
+    .overlay-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    /* ===== エクスポート成功トースト ===== */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 18px;
+      background: var(--gray-900);
+      color: white;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(.34,1.56,.64,1);
+      z-index: 2000;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    /* ===== サンプル選択モーダル ===== */
+    .sample-type-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .sample-type-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 7px;
+      padding: 18px 12px 14px;
+      border: 2px solid var(--gray-200);
+      border-radius: var(--radius-lg);
+      background: transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      text-align: center;
+      font-family: inherit;
+      width: 100%;
+    }
+    .sample-type-card:hover {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(79,70,229,.12);
+    }
+    .sample-type-card:active { transform: translateY(0); }
+
+    .stc-icon { font-size: 28px; line-height: 1; }
+    .stc-name { font-size: 13px; font-weight: 700; color: var(--gray-900); }
+    .stc-desc { font-size: 11px; color: var(--gray-400); line-height: 1.4; }
+
+    /* ===== モバイルタブ ===== */
+    .mobile-tabs { display: none; }
+    .mobile-sub-actions { display: none; }
+
+    /* ===== タブレット（641px〜1024px）: 2カラム維持、サイドバー幅縮小 ===== */
+    @media (max-width: 1024px) and (min-width: 641px) {
+      .sidebar { width: 280px; }
+      .hide-sm { display: none !important; }
+      .btn-primary { font-size: 12px; padding: 7px 11px; }
+      .header-brand h1 { font-size: 13px; }
+    }
+
+    /* ===== スマホ（〜640px）: 1カラム＋タブ切替 ===== */
+    @media (max-width: 640px) {
+      /* ヘッダー */
+      .header-brand h1 { font-size: 13px; }
+      .badge { display: none; }
+      .hide-xs { display: none; }
+      .hide-sm { display: none !important; }
+
+      /* モバイルタブ */
+      .mobile-tabs {
+        display: flex;
+        background: var(--white);
+        border-bottom: 1px solid var(--gray-200);
+        flex-shrink: 0;
+      }
+      .mobile-tab {
+        flex: 1;
+        padding: 11px 4px;
+        border: none;
+        background: transparent;
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--gray-400);
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        transition: all 0.15s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .mobile-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+      /* 設定タブ内のサブアクション（モバイルのみ表示） */
+      .mobile-sub-actions { display: block; }
+
+      /* サイドバー内タブを非表示（モバイルタブで代替） */
+      .sidebar-tabs { display: none; }
+
+      /* レイアウト */
+      .app-body { flex-direction: column; }
+      .sidebar { width: 100%; flex: 1; border-right: none; }
+      .preview-panel { display: none; flex: 1; }
+
+      /* モバイルビュー切替用クラス */
+      .sidebar.mv-hide { display: none !important; }
+      .preview-panel.mv-show { display: flex !important; }
+
+      /* サンプル選択モーダル：1列 */
+      .sample-type-grid { grid-template-columns: 1fr; }
+
+      /* プレビュー内：縦並びレイアウト */
+      .sm-header-top { flex-direction: column; align-items: flex-start; gap: 4px; }
+      .sm-meta { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+      .sm-meta-sep { display: none; }
+    }
+
+    /* ===== 下部 追加ボタン ===== */
+    .add-root-bottom-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      width: 100%;
+      margin-top: 10px;
+      padding: 10px;
+      border: 1.5px dashed var(--gray-300);
+      border-radius: var(--radius);
+      background: transparent;
+      color: var(--gray-500);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .add-root-bottom-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: var(--primary-light);
+    }
+
+    /* ===== トグルスイッチ ===== */
+    .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; }
+    .toggle-label { font-size: 13px; color: var(--gray-600); font-weight: 500; }
+    .toggle-sub { font-size: 11px; color: var(--gray-400); margin-top: 2px; }
+    .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track { position: absolute; inset: 0; background: var(--gray-200); border-radius: 999px; cursor: pointer; transition: background 0.2s; }
+    .toggle-track::after { content: ''; position: absolute; width: 16px; height: 16px; left: 3px; top: 3px; background: white; border-radius: 50%; transition: transform 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,.2); }
+    .toggle-switch input:checked + .toggle-track { background: var(--primary); }
+    .toggle-switch input:checked + .toggle-track::after { transform: translateX(18px); }
+
+  </style>
+</head>
+<body>
+
+<!-- ===== ヘッダー ===== -->
+<header class="app-header">
+  <div class="header-brand">
+    <h1>サイトマップジェネレーター</h1>
+    <span class="badge">管理画面</span>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost hide-sm" onclick="openSampleModal()" style="border-color:var(--primary)">📂 サンプル読込</button>
+    <button class="btn btn-ghost hide-sm" onclick="resetData()" title="データをリセット">🔄 リセット</button>
+    <button class="btn btn-ghost hide-sm" onclick="exportPDF()">🖨️ PDFで保存</button>
+    <button class="btn btn-primary" onclick="exportHTML()">⬇️ <span class="hide-xs">HTML形式で</span>ダウンロード</button>
+  </div>
+</header>
+
+<!-- ===== モバイルタブ（PCでは非表示） ===== -->
+<div class="mobile-tabs" id="mobile-tabs">
+  <button class="mobile-tab active" data-view="pages" onclick="setMobileView('pages',this)">📑 ページ構成</button>
+  <button class="mobile-tab" data-view="settings" onclick="setMobileView('settings',this)">⚙️ 設定</button>
+  <button class="mobile-tab" data-view="preview" onclick="setMobileView('preview',this)">👁️ プレビュー</button>
+</div>
+
+<!-- ===== ボディ ===== -->
+<div class="app-body">
+
+  <!-- 左：サイドバー -->
+  <aside class="sidebar">
+    <div class="sidebar-tabs">
+      <button class="sidebar-tab active" onclick="switchTab('pages', this)">📑 ページ構成</button>
+      <button class="sidebar-tab" onclick="switchTab('settings', this)">⚙️ プロジェクト設定</button>
+    </div>
+
+    <div class="sidebar-body">
+
+      <!-- ページ構成タブ -->
+      <div id="tab-pages">
+        <div class="pages-header">
+          <div class="form-section-title">ページ一覧</div>
+          <button class="add-root-btn" onclick="addRoot()">＋ ページを追加</button>
+        </div>
+        <div id="page-editor" class="pe-list">
+          <div class="pe-empty">
+            まだページがありません<br>
+            「＋ ページを追加」から<br>始めましょう
+          </div>
+        </div>
+        <button class="add-root-bottom-btn" id="add-root-bottom" onclick="addRoot()" style="display:none">
+          ＋ ページを追加
+        </button>
+      </div>
+
+      <!-- 設定タブ -->
+      <div id="tab-settings" style="display:none">
+        <!-- モバイルのみ表示: サブアクション -->
+        <div class="mobile-sub-actions">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <button class="btn btn-ghost" onclick="openSampleModal()" style="flex:1;min-width:120px;border-color:var(--primary)">📂 サンプル読込</button>
+            <button class="btn btn-ghost" onclick="exportPDF()" style="flex:1;min-width:120px">🖨️ PDFで保存</button>
+            <button class="btn btn-ghost" onclick="resetData()" style="flex:1;min-width:120px">🔄 リセット</button>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">サイト情報</div>
+          <div class="form-field">
+            <label class="form-label">サイト名</label>
+            <input id="f-sitename" class="form-input" type="text" placeholder="例：株式会社〇〇 コーポレートサイト" oninput="updateProject()">
+          </div>
+          <div class="form-field">
+            <label class="form-label">クライアント名</label>
+            <input id="f-client" class="form-input" type="text" placeholder="例：株式会社〇〇" oninput="updateProject()">
+          </div>
+          <div class="form-field">
+            <label class="form-label">作成日</label>
+            <input id="f-date" class="form-input" type="date" oninput="updateProject()">
+          </div>
+          <div class="form-field">
+            <label class="form-label">制作会社名（任意）</label>
+            <input id="f-agency" class="form-input" type="text" placeholder="例：〇〇デザイン" oninput="updateProject()">
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">テーマカラー</div>
+          <div class="color-row" id="color-chips"></div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">備考・メモ（エクスポートHTMLのフッターに表示）</div>
+          <textarea id="f-note" class="form-input" rows="3" placeholder="例：このサイトマップは提案資料です。内容は変更になる場合があります。" oninput="updateProject()" style="resize:vertical;line-height:1.6;font-size:13px"></textarea>
+        </div>
+        <div class="form-section">
+          <div class="toggle-row">
+            <div>
+              <div class="toggle-label">アイコンを表示</div>
+              <div class="toggle-sub">ページアイコン（絵文字）を表示</div>
+            </div>
+            <label class="toggle-switch">
+              <input type="checkbox" id="f-showicon" onchange="updateProject()" checked>
+              <span class="toggle-track"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /sidebar-body -->
+  </aside>
+
+  <!-- 右：プレビュー -->
+  <main class="preview-panel">
+    <div class="preview-toolbar">
+      <span class="preview-label">リアルタイムプレビュー</span>
+      <span class="preview-note">💡 クリックで詳細ポップアップを確認できます</span>
+    </div>
+    <div class="preview-content">
+      <div id="preview-root"></div>
+    </div>
+  </main>
+
+</div>
+
+<!-- ===== アイコンピッカーモーダル ===== -->
+<div id="icon-picker" class="overlay" onclick="closeIconPicker()">
+  <div class="overlay-box" onclick="event.stopPropagation()">
+    <div class="overlay-title">アイコンを選択</div>
+    <div class="icon-grid" id="icon-grid"></div>
+    <div class="overlay-actions">
+      <button class="btn btn-ghost" onclick="closeIconPicker()">キャンセル</button>
+      <button class="btn btn-primary" onclick="applyIcon()">選択</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== サンプル選択モーダル ===== -->
+<div id="sample-modal" class="overlay" onclick="closeSampleModal()">
+  <div class="overlay-box" style="max-width:480px" onclick="event.stopPropagation()">
+    <div class="overlay-title">📂 サンプルを選択</div>
+    <p style="font-size:12px;color:var(--gray-400);margin-bottom:14px">サイトタイプを選ぶと、サンプルのページ構成が読み込まれます。</p>
+    <div class="sample-type-grid">
+      <button class="sample-type-card" onclick="loadSampleByType('corporate')">
+        <span class="stc-icon">🏢</span>
+        <span class="stc-name">コーポレートサイト</span>
+        <span class="stc-desc">企業情報・サービス・採用</span>
+      </button>
+      <button class="sample-type-card" onclick="loadSampleByType('ec')">
+        <span class="stc-icon">🛒</span>
+        <span class="stc-name">ECサイト</span>
+        <span class="stc-desc">商品・カート・マイページ</span>
+      </button>
+      <button class="sample-type-card" onclick="loadSampleByType('portfolio')">
+        <span class="stc-icon">🎨</span>
+        <span class="stc-name">ポートフォリオサイト</span>
+        <span class="stc-desc">作品集・プロフィール</span>
+      </button>
+      <button class="sample-type-card" onclick="loadSampleByType('service')">
+        <span class="stc-icon">🚀</span>
+        <span class="stc-name">サービス紹介サイト</span>
+        <span class="stc-desc">機能・料金・導入事例</span>
+      </button>
+      <button class="sample-type-card" onclick="loadSampleByType('recruit')">
+        <span class="stc-icon">👥</span>
+        <span class="stc-name">採用サイト</span>
+        <span class="stc-desc">募集職種・社員インタビュー・エントリー</span>
+      </button>
+      <button class="sample-type-card" onclick="loadSampleByType('media')">
+        <span class="stc-icon">📰</span>
+        <span class="stc-name">WEBメディア</span>
+        <span class="stc-desc">カテゴリ・特集・著者・ランキング</span>
+      </button>
+    </div>
+    <div class="overlay-actions" style="margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeSampleModal()">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 詳細モーダル（プレビュー用） ===== -->
+<div id="detail-modal" class="overlay" onclick="closeDetailModal()">
+  <div class="overlay-box" style="max-width:420px" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+      <span id="dm-icon" style="font-size:28px"></span>
+      <div>
+        <div id="dm-title" style="font-size:16px;font-weight:700;color:#0F172A"></div>
+        <div style="font-size:11px;color:#94A3B8;margin-top:2px">掲載コンテンツ</div>
+      </div>
+    </div>
+    <div id="dm-desc" style="font-size:14px;color:#475569;line-height:1.8;background:#F8FAFC;border-radius:8px;padding:12px;min-height:60px"></div>
+    <div class="overlay-actions" style="margin-top:12px">
+      <button class="btn btn-ghost" onclick="closeDetailModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== トースト ===== -->
+<div id="toast" class="toast">✅ HTMLをダウンロードしました</div>
+
+<script>
+// ============================================================
+// データ
+// ============================================================
+
+const COLORS = [
+  { name: 'インディゴ',  value: '#4F46E5', line: '#C7D2FE' },
+  { name: 'ブルー',      value: '#2563EB', line: '#BFDBFE' },
+  { name: 'ティール',    value: '#0D9488', line: '#99F6E4' },
+  { name: 'グリーン',    value: '#16A34A', line: '#BBF7D0' },
+  { name: 'パープル',    value: '#7C3AED', line: '#DDD6FE' },
+  { name: 'ピンク',      value: '#DB2777', line: '#FBCFE8' },
+  { name: 'オレンジ',    value: '#EA580C', line: '#FED7AA' },
+  { name: 'グレー',      value: '#374151', line: '#D1D5DB' },
+];
+
+const ICONS = [
+  '📄','🏠','🏢','👥','🛍️','📞','📰','⭐',
+  '🔧','📊','💡','🎯','🏆','❓','📷','🎨',
+  '🌐','📱','💼','🔑','📍','✉️','🗂️','📋',
+  '🔍','📈','💬','🎁','🚀','⚡','🌟','🎪',
+];
+
+let seq = 0;
+
+function newPage(name = '新しいページ') {
+  return { id: `p${++seq}`, name, icon: '📄', description: '', children: [] };
+}
+
+let data = {
+  project: {
+    name: '新しいウェブサイト',
+    client: '',
+    date: todayStr(),
+    agency: '',
+    note: 'このサイトマップは提案資料です。内容は変更になる場合があります。',
+    color: COLORS[0].value,
+    lineColor: COLORS[0].line,
+    pdf2col: true,
+    showIcon: true,
+  },
+  pages: []
+};
+
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ============================================================
+// ストレージ
+// ============================================================
+
+function save() {
+  try { localStorage.setItem('sg_v1', JSON.stringify(data)); } catch(e) {}
+}
+
+function loadStored() {
+  try {
+    const s = localStorage.getItem('sg_v1');
+    if (s) {
+      data = JSON.parse(s);
+      seq = calcMaxSeq(data.pages);
+    }
+  } catch(e) {}
+}
+
+function calcMaxSeq(pages) {
+  let m = 0;
+  for (const p of pages) {
+    const n = parseInt(p.id.slice(1));
+    if (!isNaN(n) && n > m) m = n;
+    m = Math.max(m, calcMaxSeq(p.children));
+  }
+  return m;
+}
+
+// ============================================================
+// ページ操作
+// ============================================================
+
+function findPage(nodes, id) {
+  for (let i = 0; i < nodes.length; i++) {
+    if (nodes[i].id === id) return { page: nodes[i], arr: nodes, idx: i };
+    const r = findPage(nodes[i].children, id);
+    if (r) return r;
+  }
+  return null;
+}
+
+function addRoot() {
+  const pg = newPage('新しいページ');
+  data.pages.push(pg);
+  save(); renderAll();
+  scrollToNewItem(pg.id);
+}
+
+function addChild(parentId) {
+  const r = findPage(data.pages, parentId);
+  if (r) {
+    const pg = newPage('子ページ');
+    r.page.children.push(pg);
+    save(); renderAll();
+    scrollToNewItem(pg.id);
+  }
+}
+
+function scrollToNewItem(id) {
+  setTimeout(() => {
+    const el = document.querySelector(`[data-page-id="${id}"]`);
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    el.style.transition = 'box-shadow 0.3s';
+    el.style.boxShadow = '0 0 0 2px var(--primary), 0 4px 16px rgba(79,70,229,.2)';
+    setTimeout(() => { el.style.boxShadow = ''; }, 1600);
+  }, 60);
+}
+
+function removePage(id) {
+  const r = findPage(data.pages, id);
+  if (r) { r.arr.splice(r.idx, 1); save(); renderAll(); }
+}
+
+function moveUp(id) {
+  const r = findPage(data.pages, id);
+  if (r && r.idx > 0) {
+    [r.arr[r.idx-1], r.arr[r.idx]] = [r.arr[r.idx], r.arr[r.idx-1]];
+    save(); renderAll();
+  }
+}
+
+function moveDown(id) {
+  const r = findPage(data.pages, id);
+  if (r && r.idx < r.arr.length - 1) {
+    [r.arr[r.idx], r.arr[r.idx+1]] = [r.arr[r.idx+1], r.arr[r.idx]];
+    save(); renderAll();
+  }
+}
+
+function updatePageField(id, field, value) {
+  const r = findPage(data.pages, id);
+  if (r) { r.page[field] = value; save(); renderPreview(); }
+}
+
+function confirmDelete(id) {
+  const r = findPage(data.pages, id);
+  if (!r) return;
+  const msg = r.page.children.length
+    ? `「${r.page.name}」と子ページ（${r.page.children.length}件）を削除しますか？`
+    : `「${r.page.name}」を削除しますか？`;
+  if (confirm(msg)) removePage(id);
+}
+
+// ============================================================
+// タブ切替（PC用）
+// ============================================================
+
+function switchTab(tab, btn) {
+  document.querySelectorAll('.sidebar-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-pages').style.display = tab === 'pages' ? '' : 'none';
+  document.getElementById('tab-settings').style.display = tab === 'settings' ? '' : 'none';
+}
+
+// ============================================================
+// モバイルビュー切替
+// ============================================================
+
+function setMobileView(view, btn) {
+  document.querySelectorAll('.mobile-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+
+  const sidebar = document.querySelector('.sidebar');
+  const preview = document.querySelector('.preview-panel');
+  const tabPages = document.getElementById('tab-pages');
+  const tabSettings = document.getElementById('tab-settings');
+
+  if (view === 'preview') {
+    sidebar.classList.add('mv-hide');
+    preview.classList.add('mv-show');
+  } else {
+    sidebar.classList.remove('mv-hide');
+    preview.classList.remove('mv-show');
+    // サイドバー内コンテンツ切替
+    tabPages.style.display = view === 'pages' ? '' : 'none';
+    tabSettings.style.display = view === 'settings' ? '' : 'none';
+  }
+}
+
+// ============================================================
+// プロジェクト設定
+// ============================================================
+
+function updateProject() {
+  data.project.name     = document.getElementById('f-sitename').value;
+  data.project.client   = document.getElementById('f-client').value;
+  data.project.date     = document.getElementById('f-date').value;
+  data.project.agency   = document.getElementById('f-agency').value;
+  data.project.note     = document.getElementById('f-note').value;
+  data.project.showIcon = document.getElementById('f-showicon').checked;
+  save(); renderPreview(); renderEditor();
+}
+
+function setColor(color, lineColor) {
+  data.project.color = color;
+  data.project.lineColor = lineColor;
+  document.querySelectorAll('.color-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.color === color);
+  });
+  save(); renderPreview();
+}
+
+function syncFormToData() {
+  document.getElementById('f-sitename').value = data.project.name || '';
+  document.getElementById('f-client').value   = data.project.client || '';
+  document.getElementById('f-date').value     = data.project.date || todayStr();
+  document.getElementById('f-agency').value   = data.project.agency || '';
+  document.getElementById('f-note').value     = data.project.note || '';
+  document.getElementById('f-showicon').checked  = data.project.showIcon !== false;
+}
+
+// ============================================================
+// エディタレンダリング
+// ============================================================
+
+function renderAll() {
+  renderEditor();
+  renderPreview();
+}
+
+function renderEditor() {
+  const el = document.getElementById('page-editor');
+  const btn = document.getElementById('add-root-bottom');
+  if (!data.pages.length) {
+    el.innerHTML = `<div class="pe-empty">まだページがありません<br>「＋ ページを追加」から始めましょう</div>`;
+    if (btn) btn.style.display = 'none';
+    return;
+  }
+  el.innerHTML = renderPageItems(data.pages);
+  if (btn) btn.style.display = 'flex';
+}
+
+function renderPageItems(pages) {
+  return pages.map((p, i) => `
+    <div class="pe-item" data-page-id="${p.id}">
+      <div class="pe-item-header">
+        ${data.project.showIcon !== false ? `<button class="pe-icon-btn" onclick="openIconPicker('${p.id}')" title="アイコン変更">${p.icon}</button>` : ''}
+        <input class="pe-name" value="${esc(p.name)}" placeholder="ページ名"
+               oninput="updatePageField('${p.id}','name',this.value)">
+        <div class="pe-btns">
+          <button class="ib" title="上へ" onclick="moveUp('${p.id}')" ${i === 0 ? 'disabled' : ''}>↑</button>
+          <button class="ib" title="下へ" onclick="moveDown('${p.id}')" ${i === pages.length-1 ? 'disabled' : ''}>↓</button>
+          <button class="ib add" title="子ページを追加" onclick="addChild('${p.id}')">＋</button>
+          <button class="ib del" title="削除" onclick="confirmDelete('${p.id}')">✕</button>
+        </div>
+      </div>
+      <div class="pe-body">
+        <textarea class="pe-desc" placeholder="掲載コンテンツの例：代表挨拶、企業理念…（クリック時ポップアップに表示）"
+                  oninput="updatePageField('${p.id}','description',this.value)">${esc(p.description)}</textarea>
+      </div>
+      ${p.children.length ? `<div class="pe-children">${renderPageItems(p.children)}</div>` : ''}
+    </div>
+  `).join('');
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// プレビューレンダリング
+// ============================================================
+
+function renderPreview() {
+  const root = document.getElementById('preview-root');
+  const color = data.project.color;
+  const lineColor = data.project.lineColor || '#C7D2FE';
+
+  const dateDisp = data.project.date
+    ? data.project.date.replace(/-/g, '/').replace(/(\d{4})\/(\d{2})\/(\d{2})/, '$1年$2月$3日')
+    : '';
+
+  const metaParts = [];
+  if (data.project.client) metaParts.push(`クライアント：${esc(data.project.client)}`);
+  if (dateDisp) metaParts.push(`作成日：${dateDisp}`);
+  if (data.project.agency) metaParts.push(`制作：${esc(data.project.agency)}`);
+
+  root.innerHTML = `
+    <div class="sm-wrap" style="--sm-color:${color};--sm-line:${lineColor}">
+      <div class="sm-header">
+        <div class="sm-header-top">
+          <div class="sm-site-name">${esc(data.project.name || '新しいウェブサイト')}</div>
+          <span style="padding:2px 10px;background:${color}18;color:${color};border-radius:999px;font-size:11px;font-weight:700">サイトマップ</span>
+        </div>
+        ${metaParts.length ? `<div class="sm-meta">${metaParts.map(m => `<span class="sm-meta-item">${m}</span>`).join('<span class="sm-meta-sep">　｜　</span>')}</div>` : ''}
+        <div class="sm-note">💬 各ブロックをクリックすると掲載コンテンツを確認できます</div>
+      </div>
+      ${data.pages.length
+        ? `<div class="sm-tree" style="--sm-color:${color};--sm-line:${lineColor}">${renderPreviewTree(data.pages, true)}</div>`
+        : `<div class="sm-empty"><div class="empty-icon">🗺️</div><p>左パネルでページを追加すると<br>ここにプレビューが表示されます</p></div>`
+      }
+    </div>
+  `;
+}
+
+function renderPreviewTree(pages, isRoot) {
+  const items = pages.map(p => {
+    const hasChildren = p.children.length > 0;
+    const hasDesc = !!p.description;
+    return `
+      <li>
+        <div class="sm-node-card" onclick="showDetailModal('${p.id}')">
+          ${data.project.showIcon !== false ? `<span class="sm-node-icon">${p.icon}</span>` : ''}
+          <span class="sm-node-name">${esc(p.name)}</span>
+          ${hasDesc ? `<span class="sm-node-desc-hint">📝</span>` : ''}
+          ${hasChildren ? `
+            <button class="sm-toggle open" id="pvtb-${p.id}"
+                    onclick="event.stopPropagation();pvToggle('${p.id}')">▼</button>
+          ` : ''}
+        </div>
+        ${hasChildren ? `
+          <div id="pvch-${p.id}" class="sm-node-children">
+            ${renderPreviewTree(p.children, false)}
+          </div>
+        ` : ''}
+      </li>
+    `;
+  }).join('');
+
+  return `<ul>${items}</ul>`;
+}
+
+function pvToggle(id) {
+  const ch = document.getElementById('pvch-' + id);
+  const btn = document.getElementById('pvtb-' + id);
+  if (!ch) return;
+  const open = ch.style.display !== 'none';
+  ch.style.display = open ? 'none' : '';
+  btn.textContent = open ? '▶' : '▼';
+  btn.classList.toggle('open', !open);
+}
+
+function showDetailModal(id) {
+  const r = findPage(data.pages, id);
+  if (!r) return;
+  const p = r.page;
+  document.getElementById('dm-icon').textContent = data.project.showIcon !== false ? p.icon : '';
+  document.getElementById('dm-title').textContent = p.name;
+  document.getElementById('dm-desc').innerHTML = p.description
+    ? esc(p.description).replace(/\n/g,'<br>')
+    : '<span style="color:#94A3B8;font-size:13px">掲載コンテンツが未入力です。左パネルの「掲載コンテンツ」欄に入力してください。</span>';
+  document.getElementById('detail-modal').classList.add('show');
+}
+
+function closeDetailModal() {
+  document.getElementById('detail-modal').classList.remove('show');
+}
+
+// ============================================================
+// アイコンピッカー
+// ============================================================
+
+let _iconTargetId = null;
+let _selectedIcon = null;
+
+function openIconPicker(id) {
+  _iconTargetId = id;
+  const r = findPage(data.pages, id);
+  _selectedIcon = r ? r.page.icon : '📄';
+
+  const grid = document.getElementById('icon-grid');
+  grid.innerHTML = ICONS.map(ico => `
+    <button class="icon-option ${ico === _selectedIcon ? 'selected' : ''}"
+            onclick="selectIconOption('${ico}',this)">${ico}</button>
+  `).join('');
+
+  document.getElementById('icon-picker').classList.add('show');
+}
+
+function selectIconOption(ico, btn) {
+  document.querySelectorAll('.icon-option').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  _selectedIcon = ico;
+}
+
+function applyIcon() {
+  if (_iconTargetId && _selectedIcon) {
+    updatePageField(_iconTargetId, 'icon', _selectedIcon);
+    renderEditor();
+  }
+  closeIconPicker();
+}
+
+function closeIconPicker() {
+  document.getElementById('icon-picker').classList.remove('show');
+  _iconTargetId = null;
+}
+
+// ============================================================
+// サンプルデータ
+// ============================================================
+
+function openSampleModal() {
+  document.getElementById('sample-modal').classList.add('show');
+}
+
+function closeSampleModal() {
+  document.getElementById('sample-modal').classList.remove('show');
+}
+
+function loadSampleByType(type) {
+  if (data.pages.length && !confirm('現在のデータをサンプルで上書きしますか？')) return;
+  closeSampleModal();
+  seq = 0;
+
+  // ── コーポレートサイト ──────────────────────────
+  if (type === 'corporate') {
+    data = {
+      project: { name:'株式会社サンプル コーポレートサイト', client:'株式会社サンプル', date:todayStr(), agency:'デザインスタジオ〇〇', note:'このサイトマップは提案資料です。内容は変更になる場合があります。', color:COLORS[0].value, lineColor:COLORS[0].line },
+      pages: [
+        { id:`p${++seq}`, name:'TOP', icon:'🏠', description:'メインビジュアル・スライダー\nお知らせ（最新3件）\nサービス概要（3ブロック）\n会社コンセプトメッセージ\nお問い合わせCTA', children:[
+          { id:`p${++seq}`, name:'会社概要', icon:'🏢', description:'代表挨拶\n企業理念・ミッション\n会社概要（所在地・設立年等）\nアクセスマップ', children:[
+            { id:`p${++seq}`, name:'代表挨拶', icon:'👤', description:'代表取締役のメッセージ\nプロフィール写真', children:[] },
+            { id:`p${++seq}`, name:'企業理念', icon:'💡', description:'ミッション・ビジョン・バリュー', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'サービス', icon:'🛍️', description:'サービス一覧\n各サービスの概要説明\n料金プランへのリンク', children:[
+            { id:`p${++seq}`, name:'サービスA', icon:'⭐', description:'サービスAの詳細説明\n特徴・メリット\n導入事例', children:[] },
+            { id:`p${++seq}`, name:'サービスB', icon:'⭐', description:'サービスBの詳細説明\n特徴・メリット\n料金表', children:[] },
+            { id:`p${++seq}`, name:'料金プラン', icon:'📊', description:'各プランの比較表\nよくある質問（FAQ）', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'お知らせ', icon:'📰', description:'お知らせ一覧（新着順）\nカテゴリ絞り込み', children:[
+            { id:`p${++seq}`, name:'お知らせ詳細', icon:'📄', description:'記事本文\nSNSシェアボタン\n関連記事', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'採用情報', icon:'👥', description:'採用メッセージ\n募集職種一覧\n社員インタビュー\nエントリーフォームへのリンク', children:[
+            { id:`p${++seq}`, name:'エントリー', icon:'✉️', description:'応募フォーム\n必要情報の入力', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'お問い合わせ', icon:'📞', description:'お問い合わせフォーム\n電話・メールの連絡先\nFAQ', children:[] },
+        ]},
+        { id:`p${++seq}`, name:'プライバシーポリシー', icon:'🔑', description:'個人情報の取り扱いについて', children:[] },
+        { id:`p${++seq}`, name:'サイトマップ', icon:'🗂️', description:'全ページ一覧', children:[] },
+      ]
+    };
+
+  // ── ECサイト ──────────────────────────────────
+  } else if (type === 'ec') {
+    data = {
+      project: { name:'サンプルショップ ECサイト', client:'株式会社サンプルショップ', date:todayStr(), agency:'デザインスタジオ〇〇', note:'このサイトマップは提案資料です。内容は変更になる場合があります。', color:COLORS[3].value, lineColor:COLORS[3].line },
+      pages: [
+        { id:`p${++seq}`, name:'TOP', icon:'🏠', description:'メインビジュアル・バナー\nおすすめ商品\nセール・特集\nランキング\n新着商品', children:[
+          { id:`p${++seq}`, name:'商品一覧', icon:'🛍️', description:'カテゴリ別絞り込み\nキーワード検索\nソート・並び替え\n表示件数切替', children:[
+            { id:`p${++seq}`, name:'商品詳細', icon:'📦', description:'商品画像ギャラリー\n商品名・価格・説明\nサイズ・カラー選択\nカートに追加\nお気に入り登録\nレビュー・口コミ', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'特集・セール', icon:'🎁', description:'期間限定セール商品\nテーマ別特集ページ\nクーポン情報', children:[] },
+          { id:`p${++seq}`, name:'ランキング', icon:'🏆', description:'週間・月間ランキング\nカテゴリ別ランキング', children:[] },
+          { id:`p${++seq}`, name:'カート', icon:'🛒', description:'カート内商品一覧\n合計金額・送料確認\n数量変更・削除', children:[
+            { id:`p${++seq}`, name:'お届け先入力', icon:'📍', description:'届け先住所入力\n複数住所への発送', children:[] },
+            { id:`p${++seq}`, name:'お支払い', icon:'💳', description:'クレジットカード決済\n銀行振込・代引き\nコンビニ払い', children:[] },
+            { id:`p${++seq}`, name:'注文確認・完了', icon:'✅', description:'注文内容の最終確認\n注文完了ページ', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'マイページ', icon:'👤', description:'アカウント情報\nログイン・新規登録', children:[
+            { id:`p${++seq}`, name:'注文履歴', icon:'📄', description:'過去の注文一覧\n配送ステータス確認\n再注文', children:[] },
+            { id:`p${++seq}`, name:'お気に入り', icon:'⭐', description:'お気に入り商品一覧\nカートへ移動', children:[] },
+            { id:`p${++seq}`, name:'会員情報変更', icon:'🔧', description:'氏名・住所・メール変更\nパスワード変更\n退会手続き', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'ご利用ガイド', icon:'📋', description:'ご利用方法の説明', children:[
+            { id:`p${++seq}`, name:'ご注文方法', icon:'📰', description:'注文の流れ', children:[] },
+            { id:`p${++seq}`, name:'お支払い方法', icon:'💰', description:'対応決済方法の説明', children:[] },
+            { id:`p${++seq}`, name:'配送について', icon:'🚀', description:'送料・配送日数・配送業者', children:[] },
+            { id:`p${++seq}`, name:'返品・交換', icon:'🔄', description:'返品・交換の条件と手順', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'お問い合わせ', icon:'📞', description:'お問い合わせフォーム\nよくある質問（FAQ）', children:[] },
+        ]},
+        { id:`p${++seq}`, name:'プライバシーポリシー', icon:'🔑', description:'個人情報の取り扱いについて', children:[] },
+        { id:`p${++seq}`, name:'特定商取引法に基づく表記', icon:'📄', description:'事業者情報・返品について', children:[] },
+      ]
+    };
+
+  // ── ポートフォリオサイト ────────────────────────
+  } else if (type === 'portfolio') {
+    data = {
+      project: { name:'サンプル ポートフォリオサイト', client:'山田 太郎', date:todayStr(), agency:'', note:'このサイトマップは提案資料です。内容は変更になる場合があります。', color:COLORS[4].value, lineColor:COLORS[4].line },
+      pages: [
+        { id:`p${++seq}`, name:'TOP', icon:'🏠', description:'キャッチコピー・プロフィール概要\n制作実績ピックアップ\nSNSリンク\nお問い合わせCTA', children:[
+          { id:`p${++seq}`, name:'プロフィール', icon:'👤', description:'自己紹介・経歴\nスキルセット\n使用ツール・技術\n資格・受賞歴', children:[
+            { id:`p${++seq}`, name:'経歴・スキル', icon:'📋', description:'職歴・学歴\nスキルチャート\n使用ツール一覧', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'制作実績（Works）', icon:'🎨', description:'カテゴリ別フィルター\n作品一覧（サムネイル）\n使用技術タグ', children:[
+            { id:`p${++seq}`, name:'作品詳細', icon:'🖼️', description:'作品イメージ・スクリーンショット\n制作背景・コンセプト\n使用ツール・技術\nURL・GitHubリンク', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'ブログ', icon:'📰', description:'記事一覧（新着順）\nカテゴリ・タグ絞り込み', children:[
+            { id:`p${++seq}`, name:'記事詳細', icon:'📄', description:'記事本文\nSNSシェアボタン\n関連記事', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'お問い合わせ', icon:'✉️', description:'お問い合わせフォーム\nSNS・メールアドレス', children:[] },
+        ]},
+        { id:`p${++seq}`, name:'プライバシーポリシー', icon:'🔑', description:'個人情報の取り扱いについて', children:[] },
+      ]
+    };
+
+  // ── サービス紹介サイト ──────────────────────────
+  } else if (type === 'service') {
+    data = {
+      project: { name:'サンプルサービス サービス紹介サイト', client:'株式会社サンプル', date:todayStr(), agency:'デザインスタジオ〇〇', note:'このサイトマップは提案資料です。内容は変更になる場合があります。', color:COLORS[2].value, lineColor:COLORS[2].line },
+      pages: [
+        { id:`p${++seq}`, name:'TOP', icon:'🏠', description:'キャッチコピー・ファーストビュー\nサービスの特徴（3〜4ブロック）\n導入実績・ロゴ\nお客様の声\nCTA（無料トライアル・資料請求）', children:[
+          { id:`p${++seq}`, name:'サービス概要', icon:'🚀', description:'サービスの詳細説明\n主要機能一覧\n活用シーン・ユースケース', children:[
+            { id:`p${++seq}`, name:'機能一覧', icon:'⚡', description:'全機能の詳細説明\n機能比較表', children:[] },
+            { id:`p${++seq}`, name:'導入事例', icon:'🏆', description:'企業名・業種・導入背景\n課題と解決策\n導入後の成果・データ', children:[] },
+            { id:`p${++seq}`, name:'よくある質問', icon:'❓', description:'FAQリスト\n機能・料金・契約に関するQ&A', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'料金プラン', icon:'📊', description:'プラン比較表（Free / Pro / Enterprise）\n各プランの機能一覧\nよくある質問\n見積もり依頼ボタン', children:[] },
+          { id:`p${++seq}`, name:'会社情報', icon:'🏢', description:'会社概要\n代表メッセージ\nチーム紹介\nアクセス', children:[] },
+          { id:`p${++seq}`, name:'ブログ・コラム', icon:'📰', description:'お役立ち記事一覧\nカテゴリ絞り込み', children:[
+            { id:`p${++seq}`, name:'記事詳細', icon:'📄', description:'記事本文\n関連記事\nCTAバナー', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'お問い合わせ', icon:'📞', description:'お問い合わせフォーム\n電話・メール', children:[
+            { id:`p${++seq}`, name:'資料請求', icon:'📑', description:'資料請求フォーム\nダウンロード', children:[] },
+            { id:`p${++seq}`, name:'デモ申込', icon:'🖥️', description:'デモ日時選択\n担当者からの連絡', children:[] },
+          ]},
+        ]},
+        { id:`p${++seq}`, name:'プライバシーポリシー', icon:'🔑', description:'個人情報の取り扱いについて', children:[] },
+        { id:`p${++seq}`, name:'利用規約', icon:'📜', description:'サービス利用規約', children:[] },
+      ]
+    };
+
+  // ── WEBメディア ──────────────────────────────
+  } else if (type === 'media') {
+    data = {
+      project: { name:'サンプル WEBメディア', client:'株式会社サンプル', date:todayStr(), agency:'デザインスタジオ〇〇', note:'このサイトマップは提案資料です。内容は変更になる場合があります。', color:COLORS[1].value, lineColor:COLORS[1].line },
+      pages: [
+        { id:`p${++seq}`, name:'TOP', icon:'🏠', description:'最新記事一覧\nカテゴリ別ピックアップ\n人気記事ランキング\n特集・まとめ\nメルマガ登録CTA', children:[
+          { id:`p${++seq}`, name:'カテゴリ一覧', icon:'🗂️', description:'全カテゴリの一覧\n各カテゴリの説明・記事数', children:[
+            { id:`p${++seq}`, name:'カテゴリページ', icon:'📋', description:'カテゴリ内記事一覧\nサブカテゴリ絞り込み\n人気記事・新着記事', children:[
+              { id:`p${++seq}`, name:'記事詳細', icon:'📄', description:'記事本文・見出し構成\n著者情報\nSNSシェアボタン\n関連記事\nCTAバナー（メルマガ・会員登録）', children:[] },
+            ]},
+          ]},
+          { id:`p${++seq}`, name:'特集・まとめ', icon:'🌟', description:'テーマ別特集記事一覧\n編集部おすすめ特集', children:[
+            { id:`p${++seq}`, name:'特集詳細', icon:'🎯', description:'特集テーマの説明\n関連記事まとめ\n監修者情報', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'ランキング', icon:'🏆', description:'週間・月間PVランキング\nカテゴリ別ランキング\nSNSシェア数ランキング', children:[] },
+          { id:`p${++seq}`, name:'著者一覧', icon:'👥', description:'ライター・編集者一覧\n担当カテゴリ・専門分野', children:[
+            { id:`p${++seq}`, name:'著者詳細', icon:'👤', description:'著者プロフィール・経歴\n担当記事一覧\nSNSリンク', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'キーワード検索', icon:'🔍', description:'キーワード検索結果一覧\nカテゴリ・期間フィルター\nタグ絞り込み', children:[] },
+          { id:`p${++seq}`, name:'メルマガ登録', icon:'✉️', description:'メルマガ登録フォーム\n配信頻度・コンテンツの説明\n登録完了ページ', children:[] },
+          { id:`p${++seq}`, name:'このメディアについて', icon:'💡', description:'メディアのコンセプト・ミッション\n編集方針・ガイドライン\n運営会社情報', children:[] },
+          { id:`p${++seq}`, name:'広告掲載のご案内', icon:'📊', description:'広告種別・サイズ・料金\n掲載実績\nお申し込みフォーム', children:[] },
+          { id:`p${++seq}`, name:'お問い合わせ', icon:'📞', description:'お問い合わせフォーム\n記事への質問・訂正依頼\n取材・執筆依頼', children:[] },
+        ]},
+        { id:`p${++seq}`, name:'プライバシーポリシー', icon:'🔑', description:'個人情報の取り扱いについて', children:[] },
+        { id:`p${++seq}`, name:'サイトマップ', icon:'🗂️', description:'全ページ一覧', children:[] },
+      ]
+    };
+
+  // ── 採用サイト ────────────────────────────────
+  } else if (type === 'recruit') {
+    data = {
+      project: { name:'株式会社サンプル 採用サイト', client:'株式会社サンプル', date:todayStr(), agency:'デザインスタジオ〇〇', note:'このサイトマップは提案資料です。内容は変更になる場合があります。', color:COLORS[5].value, lineColor:COLORS[5].line },
+      pages: [
+        { id:`p${++seq}`, name:'TOP', icon:'🏠', description:'採用メッセージ・ビジョン\n社員の声ピックアップ\n募集職種一覧へのCTA\nエントリーボタン', children:[
+          { id:`p${++seq}`, name:'採用メッセージ', icon:'💡', description:'代表・役員からのメッセージ\n会社のビジョン・ミッション\n求める人材像', children:[] },
+          { id:`p${++seq}`, name:'募集職種一覧', icon:'📋', description:'職種カテゴリ一覧\n雇用形態での絞り込み\n新卒・中途の切り替え', children:[
+            { id:`p${++seq}`, name:'職種詳細', icon:'🎯', description:'仕事内容・業務詳細\n必要スキル・資格\n勤務地・勤務時間・給与\n選考フロー', children:[
+              { id:`p${++seq}`, name:'エントリーフォーム', icon:'✉️', description:'基本情報入力\n職務経歴・自己PR\n履歴書アップロード\n応募完了メール送信', children:[] },
+            ]},
+          ]},
+          { id:`p${++seq}`, name:'社員インタビュー', icon:'👥', description:'社員一覧（職種・年次でフィルター）\n社員の写真・コメント', children:[
+            { id:`p${++seq}`, name:'インタビュー詳細', icon:'📄', description:'入社経緯・現在の仕事\n職場の雰囲気\n将来のビジョン', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'社風・文化', icon:'🌟', description:'会社の雰囲気・カルチャー\n社内イベント紹介\nダイバーシティへの取組み', children:[
+            { id:`p${++seq}`, name:'オフィス紹介', icon:'🏢', description:'オフィス写真\n設備・環境紹介', children:[] },
+            { id:`p${++seq}`, name:'福利厚生', icon:'🎁', description:'各種手当・制度\n休暇・休日制度\n研修・教育制度', children:[] },
+          ]},
+          { id:`p${++seq}`, name:'選考フロー', icon:'📈', description:'応募から内定までの流れ\n各選考ステップの説明\n所要時間・スケジュール', children:[] },
+          { id:`p${++seq}`, name:'よくある質問', icon:'❓', description:'選考・勤務条件に関するFAQ', children:[] },
+        ]},
+        { id:`p${++seq}`, name:'プライバシーポリシー', icon:'🔑', description:'個人情報の取り扱いについて', children:[] },
+      ]
+    };
+  }
+
+  syncFormToData();
+  save();
+  renderAll();
+  // モバイル時は「ページ構成」タブへ遷移
+  if (window.innerWidth <= 640) {
+    const btn = document.querySelector('.mobile-tab[data-view="pages"]');
+    setMobileView('pages', btn);
+  }
+}
+
+// ============================================================
+// リセット
+// ============================================================
+
+function resetData() {
+  if (!confirm('全データをリセットしますか？')) return;
+  seq = 0;
+  data = {
+    project: {
+      name:'新しいウェブサイト', client:'', date:todayStr(),
+      agency:'', note:'このサイトマップは提案資料です。内容は変更になる場合があります。',
+      color: COLORS[0].value, lineColor: COLORS[0].line, pdf2col: true, showIcon: true,
+    },
+    pages: []
+  };
+  syncFormToData();
+  save();
+  renderAll();
+}
+
+// ============================================================
+// HTMLエクスポート / PDFエクスポート
+// ============================================================
+
+function exportHTML() {
+  if (!data.pages.length) {
+    alert('ページが1つもありません。まずページを追加してください。');
+    return;
+  }
+
+  const html = generateExportHTML();
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const siteName = data.project.name.replace(/[<>:"/\\|?*]/g,'_').slice(0,40);
+  a.href = url;
+  a.download = `sitemap_${siteName}_${data.project.date || todayStr()}.html`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast('✅ サイトマップをダウンロードしました');
+}
+
+function exportPDF() {
+  if (!data.pages.length) {
+    alert('ページが1つもありません。まずページを追加してください。');
+    return;
+  }
+  // エクスポートHTMLにロード後自動印刷スクリプトを追加して新しいウィンドウで開く
+  const html = generateExportHTML().replace(
+    '</body>',
+    `<script>window.addEventListener('load',()=>setTimeout(()=>window.print(),600));<\/script></body>`
+  );
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  showToast('🖨️ 印刷ダイアログが開きます（PDF保存を選択）');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ============================================================
+// エクスポートHTML生成
+// ============================================================
+
+function generateExportHTML() {
+  const p = data.project;
+  const color = p.color || '#4F46E5';
+  const lineColor = p.lineColor || '#C7D2FE';
+
+  const dateDisp = (p.date || '')
+    .replace(/-/g,'/')
+    .replace(/(\d{4})\/(\d{2})\/(\d{2})/, '$1年$2月$3日');
+
+  const metaParts = [];
+  if (p.client) metaParts.push(`クライアント：${escExport(p.client)}`);
+  if (dateDisp) metaParts.push(`作成日：${dateDisp}`);
+  if (p.agency) metaParts.push(`制作：${escExport(p.agency)}`);
+
+  const pagesJSON = JSON.stringify(data.pages);
+  const showIcon = p.showIcon !== false;
+  const treeClass = 'tree';
+
+  return `<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escExport(p.name || 'サイトマップ')} - サイトマップ</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --color:${color};
+  --line:${lineColor};
+  --bg:#F0F4FF;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Hiragino Sans','Noto Sans JP',sans-serif;
+  background:var(--bg);
+  min-height:100vh;
+  color:#0F172A;
+}
+.page-wrap{
+  max-width:900px;
+  margin:0 auto;
+  padding:32px 20px 60px;
+}
+/* ヘッダー */
+.sm-header{
+  background:white;
+  border-radius:16px;
+  padding:28px 32px;
+  margin-bottom:32px;
+  box-shadow:0 4px 20px rgba(0,0,0,.07);
+  border-top:5px solid var(--color);
+}
+.sm-header-top{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  margin-bottom:8px;
+}
+.sm-logo{font-size:28px}
+.sm-title{
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:-0.02em;
+  color:#0F172A;
+}
+.sm-badge{
+  padding:3px 12px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.04em;
+  background:color-mix(in srgb,var(--color) 15%,white);
+  color:var(--color);
+}
+.sm-meta{
+  font-size:13px;
+  color:#64748B;
+  margin-bottom:6px;
+}
+.sm-note{
+  font-size:12px;
+  color:#94A3B8;
+  display:flex;
+  align-items:center;
+  gap:6px;
+}
+/* ツリー */
+.tree ul{
+  list-style:none;
+  padding:0;
+  margin:0;
+  padding-left:24px;
+  position:relative;
+}
+.tree ul::before{
+  content:'';
+  position:absolute;
+  left:0;top:0;bottom:16px;
+  width:2px;
+  background:var(--line);
+  border-radius:1px;
+}
+.tree li{
+  position:relative;
+  margin-bottom:8px;
+}
+.tree li::before{
+  content:'';
+  position:absolute;
+  left:-24px;
+  top:18px;
+  width:20px;
+  height:2px;
+  background:var(--line);
+}
+.tree>ul>li::before{display:none}
+.tree>ul::before{display:none}
+/* ノードカード */
+.node-card{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 18px;
+  background:white;
+  border-radius:10px;
+  box-shadow:0 2px 10px rgba(0,0,0,.07);
+  cursor:pointer;
+  border-left:4px solid var(--color);
+  transition:all .2s;
+  min-width:150px;
+  max-width:500px;
+  position:relative;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.node-card:hover{
+  transform:translateX(4px);
+  box-shadow:0 6px 20px rgba(0,0,0,.12);
+  border-left-width:5px;
+}
+.node-card:active{transform:translateX(2px) scale(.99)}
+.node-icon{font-size:18px;flex-shrink:0}
+.node-name{
+  font-size:14px;
+  font-weight:600;
+  color:#0F172A;
+  flex:1;
+  line-height:1.4;
+}
+.node-hint{
+  font-size:10px;
+  color:#94A3B8;
+}
+.node-toggle{
+  width:22px;height:22px;
+  border-radius:50%;
+  background:#F1F5F9;
+  border:none;
+  cursor:pointer;
+  font-size:9px;
+  color:#64748B;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  transition:all .2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.node-toggle:hover{background:#E2E8F0}
+.node-toggle.open{background:var(--color);color:white}
+/* ルートノードは大きく */
+.tree>ul>li>.node-card{
+  padding:15px 22px;
+  border-radius:12px;
+  border-left-width:5px;
+}
+.tree>ul>li>.node-card .node-name{font-size:16px}
+.tree>ul>li>.node-card .node-icon{font-size:22px}
+/* 子コンテナ */
+.node-children{
+  margin-top:6px;
+  overflow:hidden;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+/* モーダル */
+.modal-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1000;
+  padding:20px;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.show{display:flex}
+.modal-box{
+  background:white;
+  border-radius:20px;
+  padding:28px;
+  width:100%;
+  max-width:420px;
+  box-shadow:0 24px 60px rgba(0,0,0,.2);
+  animation:modalIn .25s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes modalIn{
+  from{opacity:0;transform:scale(.9) translateY(10px)}
+  to{opacity:1;transform:scale(1) translateY(0)}
+}
+.modal-header{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  margin-bottom:16px;
+}
+.modal-icon{font-size:32px;flex-shrink:0;line-height:1}
+.modal-label{font-size:11px;color:#94A3B8;margin-bottom:4px}
+.modal-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.modal-desc-box{
+  background:#F8FAFC;
+  border-radius:10px;
+  padding:14px 16px;
+  font-size:14px;
+  color:#475569;
+  line-height:1.8;
+  min-height:60px;
+  white-space:pre-wrap;
+}
+.modal-close{
+  display:flex;
+  width:100%;
+  justify-content:flex-end;
+  margin-top:16px;
+}
+.modal-close-btn{
+  padding:8px 20px;
+  border:1px solid #E2E8F0;
+  border-radius:8px;
+  background:transparent;
+  font-size:13px;
+  font-weight:500;
+  cursor:pointer;
+  color:#64748B;
+}
+.modal-close-btn:hover{background:#F1F5F9}
+/* フッター */
+.sm-footer{
+  margin-top:48px;
+  padding:20px;
+  border-top:1px solid #E2E8F0;
+  font-size:12px;
+  color:#94A3B8;
+  text-align:center;
+  line-height:1.8;
+}
+/* スマホ対応 */
+@media(max-width:600px){
+  .page-wrap{padding:16px 12px 40px}
+  .sm-header{padding:20px;border-radius:12px}
+  .sm-title{font-size:18px}
+  .node-card{min-width:120px;padding:9px 14px}
+  .node-name{font-size:13px}
+  .tree ul{padding-left:18px}
+  .tree li::before{left:-18px;width:14px}
+}
+/* PDF保存ボタン */
+.pdf-btn-wrap{
+  display:flex;justify-content:flex-end;margin-bottom:20px;
+}
+.pdf-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 18px;
+  background:white;
+  border:1px solid #E2E8F0;
+  border-radius:10px;
+  font-size:13px;font-weight:600;color:#475569;
+  cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,.06);
+  transition:all .15s;
+}
+.pdf-btn:hover{background:#F8FAFC;box-shadow:0 4px 12px rgba(0,0,0,.1);}
+/* ノード説明（通常時非表示・印刷時表示） */
+.node-desc{display:none;font-size:10px;color:#64748B;line-height:1.65;margin:4px 0 8px 10px;padding-left:14px;border-left:2px solid var(--line);white-space:pre-wrap}
+/* 印刷時スタイル */
+@page{size:A4;margin:12mm 15mm}
+@media print{
+  body{background:white !important}
+  .page-wrap{max-width:none;padding:0}
+  .sm-header{box-shadow:none;border-radius:6px;padding:14px 20px;margin-bottom:12px}
+  .sm-note{display:none !important}
+  .tree ul{padding-left:18px}
+  .tree>ul{padding-left:0}
+  .tree li{margin-bottom:4px}
+  .node-children{display:block !important;margin-top:3px;overflow:visible}
+  .node-desc{display:block !important}
+  .node-hint{display:none}
+  .node-card{box-shadow:none;border:none !important;background:transparent;padding:2px 0 !important;min-width:0;cursor:default;break-inside:avoid;break-after:avoid}
+  .tree>ul>li>.node-card{padding:2px 0 !important}
+  .node-card:hover{transform:none !important;box-shadow:none !important}
+  .node-toggle{display:none !important}
+  .modal-overlay{display:none !important}
+  .pdf-btn-wrap{display:none !important}
+  .sm-footer{margin-top:32px;padding:16px 0 0;border-top:1px solid #E2E8F0;background:transparent}
+}
+</style>
+</head>
+<body>
+<div class="page-wrap">
+  <div class="pdf-btn-wrap">
+    <button class="pdf-btn" onclick="window.print()">🖨️ PDFで保存 / 印刷</button>
+  </div>
+  <div class="sm-header">
+    <div class="sm-header-top">
+      <span class="sm-title">${escExport(p.name || 'サイトマップ')}</span>
+      <span class="sm-badge">SITE MAP</span>
+    </div>
+    ${metaParts.length ? `<div class="sm-meta">${metaParts.join('　|　')}</div>` : ''}
+    <div class="sm-note">💬 各ブロックをタップ・クリックすると、掲載予定のコンテンツを確認できます</div>
+  </div>
+  <div class="${treeClass}" id="tree"></div>
+</div>
+
+<!-- モーダル -->
+<div class="modal-overlay" id="modal" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <span class="modal-icon" id="m-icon"></span>
+      <div>
+        <div class="modal-label">掲載コンテンツ</div>
+        <div class="modal-title" id="m-title"></div>
+      </div>
+    </div>
+    <div class="modal-desc-box" id="m-desc"></div>
+    <div class="modal-close">
+      <button class="modal-close-btn" onclick="closeModal()">閉じる</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const PAGES = ${pagesJSON};
+const SHOW_ICON = ${showIcon};
+
+function findPage(pages, id) {
+  for (const p of pages) {
+    if (p.id === id) return p;
+    const r = findPage(p.children, id);
+    if (r) return r;
+  }
+  return null;
+}
+
+function buildTree(pages, isRoot) {
+  const items = pages.map(p => {
+    const hasChildren = p.children && p.children.length > 0;
+    const hasDesc = !!p.description;
+    return \`<li>
+      <div class="node-card" onclick="openModal('\${p.id}')">
+        \${SHOW_ICON ? '<span class="node-icon">' + p.icon + '</span>' : ''}
+        <span class="node-name">\${escHtml(p.name)}</span>
+        \${hasDesc ? '<span class="node-hint">📝</span>' : ''}
+        \${hasChildren ? \`<button class="node-toggle open" id="tb-\${p.id}"
+          onclick="event.stopPropagation();toggle('\${p.id}')">▼</button>\` : ''}
+      </div>
+      \${hasDesc ? '<div class="node-desc">' + escHtml(p.description) + '</div>' : ''}
+      \${hasChildren ? \`
+        <div class="node-children" id="ch-\${p.id}">\${buildTree(p.children, false)}</div>
+      \` : ''}
+    </li>\`;
+  }).join('');
+  return \`<ul>\${items}</ul>\`;
+}
+
+function toggle(id) {
+  const ch = document.getElementById('ch-' + id);
+  const btn = document.getElementById('tb-' + id);
+  if (!ch) return;
+  const isOpen = ch.style.display !== 'none';
+  ch.style.display = isOpen ? 'none' : '';
+  btn.textContent = isOpen ? '▶' : '▼';
+  btn.classList.toggle('open', !isOpen);
+}
+
+function openModal(id) {
+  const p = findPage(PAGES, id);
+  if (!p) return;
+  document.getElementById('m-icon').textContent = p.icon;
+  document.getElementById('m-title').textContent = p.name;
+  document.getElementById('m-desc').textContent = p.description || '（掲載コンテンツは別途ご確認ください）';
+  document.getElementById('modal').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('show');
+}
+
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+document.getElementById('tree').innerHTML = buildTree(PAGES, true);
+<\/script>
+
+${p.note ? `<div class="sm-footer">${escExport(p.note).replace(/\n/g,'<br>')}<br><br>🗺️ ${escExport(p.name || '')}</div>` : ''}
+</body>
+</html>`;
+}
+
+function escExport(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+// カラーチップ初期化
+// ============================================================
+
+function initColorChips() {
+  const container = document.getElementById('color-chips');
+  container.innerHTML = COLORS.map(c => `
+    <div class="color-chip ${c.value === data.project.color ? 'active' : ''}"
+         data-color="${c.value}"
+         style="background:${c.value}"
+         title="${c.name}"
+         onclick="setColor('${c.value}','${c.line}')"></div>
+  `).join('');
+}
+
+// ============================================================
+// 初期化
+// ============================================================
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadStored();
+  syncFormToData();
+  initColorChips();
+  renderAll();
+});
+</script>
+<script src="xml-sitemap.js"></script>
+</body>
+</html>
